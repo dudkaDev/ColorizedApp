@@ -29,8 +29,6 @@ class ViewController: UIViewController {
         changeColor()
     }
     
-    
-    
     @IBAction func sliderAction() {
         roundValue()
         
