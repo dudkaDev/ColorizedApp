@@ -52,7 +52,7 @@ class ViewController: UIViewController {
             blue: CGFloat(blueSlider.value)/1, alpha: 1
         )
     }
-    
+
     private func randomValueAtStart() {
         let redSliderValue = Float.random(
             in: redSlider.minimumValue..<redSlider.maximumValue
