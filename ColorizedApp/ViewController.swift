@@ -21,36 +21,40 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         colorResultView.layer.cornerRadius = 12
-        
         randomValueAtStart()
-        
         changeColor()
     }
     
-    @IBAction func sliderAction() {
-        roundValue()
-        
+    @IBAction func sliderAction(_ sender: UISlider) {
         changeColor()
+        switch sender {
+        case redSlider:
+            redValueLabel.text = string(from: sender)
+        case greenValueLabel:
+            greenValueLabel.text = string(from: sender)
+        default:
+            blueValueLabel.text = string(from: sender)
+        }
     }
-
+    
     private func roundValue() {
-        let redSliderValue = redSlider.value
-        let greenSliderValue = greenSlider.value
-        let blueSliderValue = blueSlider.value
-        
-        redValueLabel.text = (String(format: "%.2f", redSliderValue))
-        greenValueLabel.text = (String(format: "%.2f", greenSliderValue))
-        blueValueLabel.text = (String(format: "%.2f", blueSliderValue))
+        redValueLabel.text = string(from: redSlider)
+        greenValueLabel.text = string(from: greenSlider)
+        blueValueLabel.text = string(from: blueSlider)
     }
     
     private func changeColor() {
         colorResultView.backgroundColor = UIColor(
-            red: CGFloat(redSlider.value)/1,
-            green: CGFloat(greenSlider.value)/1,
-            blue: CGFloat(blueSlider.value)/1, alpha: 1
+            red: CGFloat(redSlider.value),
+            green: CGFloat(greenSlider.value),
+            blue: CGFloat(blueSlider.value),
+            alpha: 1
         )
+    }
+    
+    private func string(from slider: UISlider) -> String {
+        String(format: "%.2f", slider.value)
     }
 
     private func randomValueAtStart() {
