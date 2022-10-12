@@ -104,6 +104,54 @@ extension SettingsViewController: UITextFieldDelegate {
         view.endEditing(true)
     }
     
+    /*
+     В документации к UITextFieldDelegate нашел метод textField
+     с помощью которого можно всячески ограничивать вводимые пользователем данные.
+     
+     Ну а дальше открыл гугл и тут понеслось. 😁
+     
+     Логика всего, что я смог найти, мне понятна. Но также есть ощущение, что так жестко ограничивать
+     ввод данных для пользователя не правильно и лучше реализовывать алгоритмы исправления за пользователем,
+     поэтому решил остановиться.
+     
+     В итоге оставляю так, на ваш суд и до разбора дз 😎
+     */
+    
+    func textField(
+        _ textField: UITextField,
+        shouldChangeCharactersIn range: NSRange,
+        replacementString string: String) -> Bool {
+            
+            //Ограничиваем ввод букв и символов, кроме "."
+            let allowedCharacters = CharacterSet(charactersIn: "01234567890.")
+            let characterSet = CharacterSet(charactersIn: string)
+            
+            //Ограничиваем допустимое кол-во символов в текстовом поле
+            let maxLength = 4
+            let currentString: NSString = textField.text! as NSString
+            let newString: NSString = currentString.replacingCharacters(in: range, with: string) as NSString
+            
+            //Ограничиваем допустимое кол-во символа "."
+            let dotsCount = textField.text!.components(separatedBy: ".").count - 1
+            if dotsCount > 0 && (string == ".") {
+                return false
+            }
+            
+            //Ограничиваем диапазон вводимых данных
+            let minValue: Float = 0
+            let maxValue: Float = 1
+            lazy var valuesRange = minValue...maxValue
+            
+            let text = NSString(string: textField.text!).replacingCharacters(in: range, with: string)
+            if text.isEmpty {
+                return true
+            }
+            
+            return allowedCharacters.isSuperset(of: characterSet)
+            && newString.length <= maxLength
+            && valuesRange.contains(Float(text) ?? minValue - 1)
+        }
+    
     func textFieldDidEndEditing(_ textField: UITextField) {
         guard let text = textField.text else { return }
         if text.isEmpty {
@@ -160,8 +208,16 @@ extension SettingsViewController: UITextFieldDelegate {
         blueTextField.text = (String(format: "%.2f", blueSlider.value))
     }
     
-    private func showAlert(title: String, message: String, textField: UITextField? = nil) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+    private func showAlert(
+        title: String,
+        message: String,
+        textField: UITextField? = nil
+    ) {
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
         let okAction = UIAlertAction(title: "OK", style: .default) { _ in
             textField?.text = (String(format: "%.2f", self.redSlider.value))
         }
