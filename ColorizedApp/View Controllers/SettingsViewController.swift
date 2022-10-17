@@ -35,7 +35,6 @@ class SettingsViewController: UIViewController {
         
         setSliders()
         setValueLabels()
-        
         setValueTextFields()
         
         doneButton.layer.cornerRadius = 12
@@ -43,6 +42,11 @@ class SettingsViewController: UIViewController {
         redTextField.delegate = self
         greenTextField.delegate = self
         blueTextField.delegate = self
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        view.endEditing(true)
     }
     
     @IBAction func sliderAction(_ sender: UISlider) {
@@ -60,7 +64,7 @@ class SettingsViewController: UIViewController {
         setColor()
     }
     
-    @IBAction func doneButtonPresser() {
+    @IBAction func doneButtonPressed() {
         delegate.setColor(for: colorResultView.backgroundColor ?? .white)
         dismiss(animated: true)
     }
@@ -90,33 +94,31 @@ extension SettingsViewController {
     }
     
     private func setValueLabels() {
-        redValueLabel.text = (String(format: "%.2f", redSlider.value))
-        greenValueLabel.text = (String(format: "%.2f", greenSlider.value))
-        blueValueLabel.text = (String(format: "%.2f", blueSlider.value))
+        redValueLabel.text = String(format: "%.2f", redSlider.value)
+        greenValueLabel.text = String(format: "%.2f", greenSlider.value)
+        blueValueLabel.text = String(format: "%.2f", blueSlider.value)
+    }
+    
+    private func setValueTextFields() {
+        redTextField.text = String(format: "%.2f", redSlider.value)
+        greenTextField.text = String(format: "%.2f", greenSlider.value)
+        blueTextField.text = String(format: "%.2f", blueSlider.value)
+    }
+    
+    private func showAlert(title: String, message: String, textField: UITextField? = nil) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default) { _ in
+            textField?.text = String(format: "%.2f", self.redSlider.value)
+            textField?.becomeFirstResponder()
+        }
+        alert.addAction(okAction)
+        present(alert, animated: true)
     }
 }
 
 //MARK: - Methods for text fields and keyboard
 extension SettingsViewController: UITextFieldDelegate {
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-        view.endEditing(true)
-    }
-    
-    /*
-     В документации к UITextFieldDelegate нашел метод textField
-     с помощью которого можно всячески ограничивать вводимые пользователем данные.
-     
-     Ну а дальше открыл гугл и тут понеслось. 😁
-     
-     Логика всего, что я смог найти, мне понятна. Но также есть ощущение, что так жестко ограничивать
-     ввод данных для пользователя не правильно и лучше реализовывать алгоритмы исправления за пользователем,
-     поэтому решил остановиться.
-     
-     В итоге оставляю так, на ваш суд и до разбора дз 😎
-     */
-    
+
     func textField(
         _ textField: UITextField,
         shouldChangeCharactersIn range: NSRange,
@@ -137,46 +139,40 @@ extension SettingsViewController: UITextFieldDelegate {
                 return false
             }
             
-            //Ограничиваем диапазон вводимых данных
-            let minValue: Float = 0
-            let maxValue: Float = 1
-            lazy var valuesRange = minValue...maxValue
-            
-            let text = NSString(string: textField.text!).replacingCharacters(in: range, with: string)
-            if text.isEmpty {
-                return true
-            }
-            
             return allowedCharacters.isSuperset(of: characterSet)
             && newString.length <= maxLength
-            && valuesRange.contains(Float(text) ?? minValue - 1)
         }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
-        guard let text = textField.text else { return }
-        if text.isEmpty {
+        guard let text = textField.text else {
+            showAlert(
+                title: "Wrong format!",
+                message: "Please enter correct value"
+            )
+            return
+        }
+        
+        guard let currentValue = Float(text), (0...1).contains(currentValue) else {
             showAlert(
                 title: "Wrong format!",
                 message: "Please enter correct value",
                 textField: textField
             )
-        }
-        
-        if let currentValue = Float(text) {
-            switch textField {
-            case redTextField:
-                redSlider.setValue(currentValue, animated: true)
-                redValueLabel.text = (String(format: "%.2f", redSlider.value))
-            case greenTextField:
-                greenSlider.setValue(currentValue, animated: true)
-                greenValueLabel.text = (String(format: "%.2f", greenSlider.value))
-            default:
-                blueSlider.setValue(currentValue, animated: true)
-                blueValueLabel.text = (String(format: "%.2f", blueSlider.value))
-            }
-            setColor()
             return
         }
+        
+        switch textField {
+        case redTextField:
+            redSlider.setValue(currentValue, animated: true)
+            redValueLabel.text = String(format: "%.2f", redSlider.value)
+        case greenTextField:
+            greenSlider.setValue(currentValue, animated: true)
+            greenValueLabel.text = String(format: "%.2f", greenSlider.value)
+        default:
+            blueSlider.setValue(currentValue, animated: true)
+            blueValueLabel.text = String(format: "%.2f", blueSlider.value)
+        }
+        setColor()
     }
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
@@ -186,8 +182,8 @@ extension SettingsViewController: UITextFieldDelegate {
         
         let doneButton = UIBarButtonItem(
             barButtonSystemItem: .done,
-            target: self,
-            action: #selector(didTapOne)
+            target: textField,
+            action: #selector(resignFirstResponder)
         )
         let flexibleSpace = UIBarButtonItem(
             barButtonSystemItem: .flexibleSpace,
@@ -196,32 +192,5 @@ extension SettingsViewController: UITextFieldDelegate {
         )
         
         toolBar.items = [flexibleSpace, doneButton]
-    }
-    
-    @objc private func didTapOne() {
-        view.endEditing(true)
-    }
-    
-    private func setValueTextFields() {
-        redTextField.text = (String(format: "%.2f", redSlider.value))
-        greenTextField.text = (String(format: "%.2f", greenSlider.value))
-        blueTextField.text = (String(format: "%.2f", blueSlider.value))
-    }
-    
-    private func showAlert(
-        title: String,
-        message: String,
-        textField: UITextField? = nil
-    ) {
-        let alert = UIAlertController(
-            title: title,
-            message: message,
-            preferredStyle: .alert
-        )
-        let okAction = UIAlertAction(title: "OK", style: .default) { _ in
-            textField?.text = (String(format: "%.2f", self.redSlider.value))
-        }
-        alert.addAction(okAction)
-        present(alert, animated: true)
     }
 }
